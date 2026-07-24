@@ -1,0 +1,146 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* faint ruled-notebook texture across the whole page */
+.rule-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 35px,
+    var(--bg-rule) 35px,
+    var(--bg-rule) 36px
+  );
+  opacity: 0.6;
+  z-index: 0;
+}
+
+/* margin rule, like the red line on ruled paper */
+.margin-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: clamp(28px, 6vw, 88px);
+  width: 1px;
+  background: var(--accent);
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  gap: 30px;
+}
+
+.tagline {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+  font-weight: 500;
+  line-height: 1.3;
+  max-width: 780px;
+  margin: -56px 0 0;
+  color: var(--ink);
+}
+
+.tagline-highlight {
+  position: relative;
+  display: inline-block;
+  font-weight: 600;
+}
+
+.highlighter {
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  bottom: -0.32em;
+  width: 112%;
+  height: 0.5em;
+  transform: rotate(-1deg);
+  z-index: -1;
+}
+
+.cta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  text-decoration: none;
+  color: var(--ink-muted);
+  border: 1px solid var(--border);
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+    background-color 0.25s var(--ease);
+}
+
+.github-link:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  padding: 22px 20px 30px;
+}
+
+.heart {
+  color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .margin-rule {
+    left: 18px;
+  }
+
+  .tagline {
+    margin-top: -24px;
+  }
+
+  .cta-row {
+    flex-direction: column;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
