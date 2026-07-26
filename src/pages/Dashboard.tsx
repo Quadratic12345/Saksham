@@ -1,8 +1,11 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, FormEvent } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeToggle } from '../components/ThemeToggle';
 import ProfileMenu from '../components/ProfileMenu';
+import { ApiError, askQuestion, deleteDocument, listDocuments, uploadDocument } from '../lib/api';
+import type { ApiDocument } from '../lib/api';
 import './Dashboard.css';
 
 type FileStatus = 'uploading' | 'parsing' | 'ready' | 'error';
@@ -12,6 +15,7 @@ interface UploadedFile {
   name: string;
   sizeLabel: string;
   status: FileStatus;
+  errorMessage?: string;
 }
 
 interface ChatMessage {
@@ -100,62 +104,88 @@ function statusLabel(status: FileStatus): string {
   }
 }
 
+function toUploadedFile(doc: ApiDocument, sizeLabel = '—'): UploadedFile {
+  return {
+    id: doc.id,
+    name: doc.filename,
+    sizeLabel,
+    status: doc.status,
+  };
+}
+
 function Dashboard() {
   const { theme, toggleTheme } = useTheme();
+  const { getToken } = useAuth();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [messagesByFile, setMessagesByFile] = useState<Record<string, ChatMessage[]>>({});
   const [isThinking, setIsThinking] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeFile = files.find((f) => f.id === activeFileId) ?? null;
   const activeMessages = activeFileId ? messagesByFile[activeFileId] ?? [] : [];
 
-  const ingestFiles = useCallback((fileList: FileList) => {
-    const pdfFiles = Array.from(fileList).filter((f) => f.type === 'application/pdf');
-    if (pdfFiles.length === 0) return;
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const docs = await listDocuments(token);
+        setFiles(docs.map((d) => toUploadedFile(d)));
+      } catch (err) {
+        setLoadError(err instanceof Error ? err.message : 'Could not load your documents.');
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    })();
+  }, [getToken]);
 
-    pdfFiles.forEach((file) => {
-      const id = `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const entry: UploadedFile = {
-        id,
-        name: file.name,
-        sizeLabel: formatSize(file.size),
-        status: 'uploading',
-      };
+  const ingestFiles = useCallback(
+    (fileList: FileList) => {
+      const pdfFiles = Array.from(fileList).filter((f) => f.type === 'application/pdf');
 
-      setFiles((prev) => [...prev, entry]);
-      setActiveFileId((prev) => prev ?? id);
+      pdfFiles.forEach(async (file) => {
+        const tempId = `uploading-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const placeholder: UploadedFile = {
+          id: tempId,
+          name: file.name,
+          sizeLabel: formatSize(file.size),
+          status: 'uploading',
+        };
 
-      // ------------------------------------------------------------------
-      // BACKEND TODO: this whole block simulates upload + parsing so the
-      // UI is fully wired. Replace with a real call once the backend
-      // exists, e.g.:
-      //
-      //   const formData = new FormData();
-      //   formData.append('file', file);
-      //   const res = await fetch('/api/documents', { method: 'POST', body: formData });
-      //   // backend extracts PDF text, chunks it, generates embeddings,
-      //   // and stores them in a vector index keyed by the returned doc id.
-      //
-      // Update status to 'ready' once the backend confirms parsing/
-      // embedding is complete, or 'error' if it fails.
-      // ------------------------------------------------------------------
-      setTimeout(() => {
-        setFiles((prev) =>
-          prev.map((f) => (f.id === id ? { ...f, status: 'parsing' } : f))
-        );
-      }, 700);
+        setFiles((prev) => [...prev, placeholder]);
+        setActiveFileId((prev) => prev ?? tempId);
 
-      setTimeout(() => {
-        setFiles((prev) =>
-          prev.map((f) => (f.id === id ? { ...f, status: 'ready' } : f))
-        );
-      }, 2200);
-    });
-  }, []);
+        try {
+          const token = await getToken();
+          if (!token) throw new Error('Not signed in.');
+
+          const doc = await uploadDocument(file, token);
+
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === tempId
+                ? { ...toUploadedFile(doc, placeholder.sizeLabel) }
+                : f
+            )
+          );
+          setActiveFileId((prev) => (prev === tempId ? doc.id : prev));
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Upload failed.';
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === tempId ? { ...f, status: 'error', errorMessage: message } : f
+            )
+          );
+        }
+      });
+    },
+    [getToken]
+  );
 
   const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) ingestFiles(e.target.files);
@@ -168,17 +198,27 @@ function Dashboard() {
     if (e.dataTransfer.files) ingestFiles(e.dataTransfer.files);
   };
 
-  const removeFile = (id: string) => {
+  const removeFile = async (id: string) => {
+    const wasActive = activeFileId === id;
+
     setFiles((prev) => prev.filter((f) => f.id !== id));
     setMessagesByFile((prev) => {
       const next = { ...prev };
       delete next[id];
       return next;
     });
-    setActiveFileId((prev) => (prev === id ? null : prev));
+    if (wasActive) setActiveFileId(null);
+
+    try {
+      const token = await getToken();
+      if (token) await deleteDocument(id, token);
+    } catch {
+      // Deletion failing server-side isn't critical to surface here —
+      // the file is already gone from the visible list.
+    }
   };
 
-  const handleSendMessage = (e: FormEvent) => {
+  const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     const text = draftMessage.trim();
     if (!text || !activeFile || activeFile.status !== 'ready') return;
@@ -196,32 +236,38 @@ function Dashboard() {
     setDraftMessage('');
     setIsThinking(true);
 
-    // ------------------------------------------------------------------
-    // BACKEND TODO: replace this simulated reply with a real RAG call, e.g.:
-    //
-    //   const res = await fetch('/api/chat', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ documentId: activeFile.id, question: text }),
-    //   });
-    //   const { answer } = await res.json();
-    //
-    // On the backend: embed the question, run a similarity search against
-    // the stored chunks for this document, then send the top matches plus
-    // the question to an LLM and stream the answer back.
-    // ------------------------------------------------------------------
-    setTimeout(() => {
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Not signed in.');
+
+      const answer = await askQuestion(activeFile.id, text, token);
+
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-assistant`,
         role: 'assistant',
-        text: `This is a placeholder answer — once the backend is connected, I'll search "${activeFile.name}" and answer based on what's actually in it.`,
+        text: answer,
       };
       setMessagesByFile((prev) => ({
         ...prev,
         [activeFile.id]: [...(prev[activeFile.id] ?? []), assistantMessage],
       }));
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : 'Something went wrong reaching the server — is the backend running?';
+      const errorMessage: ChatMessage = {
+        id: `${Date.now()}-error`,
+        role: 'assistant',
+        text: message,
+      };
+      setMessagesByFile((prev) => ({
+        ...prev,
+        [activeFile.id]: [...(prev[activeFile.id] ?? []), errorMessage],
+      }));
+    } finally {
       setIsThinking(false);
-    }, 1100);
+    }
   };
 
   return (
@@ -266,7 +312,11 @@ function Dashboard() {
             />
           </div>
 
-          {files.length === 0 ? (
+          {loadError && <p className="dash-empty-hint">Couldn't load your documents: {loadError}</p>}
+
+          {isLoadingFiles ? (
+            <p className="dash-empty-hint">Loading your documents…</p>
+          ) : files.length === 0 ? (
             <p className="dash-empty-hint">
               Upload a PDF of your notes to start asking questions about them.
             </p>
@@ -314,7 +364,13 @@ function Dashboard() {
               </p>
             )}
 
-            {activeFile && activeFile.status !== 'ready' && (
+            {activeFile && activeFile.status === 'error' && (
+              <p className="dash-empty-hint">
+                Something went wrong with this file{activeFile.errorMessage ? `: ${activeFile.errorMessage}` : '.'}
+              </p>
+            )}
+
+            {activeFile && (activeFile.status === 'uploading' || activeFile.status === 'parsing') && (
               <p className="dash-empty-hint">
                 {statusLabel(activeFile.status)} — this'll just take a moment.
               </p>

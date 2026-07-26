@@ -1,19 +1,19 @@
-from anthropic import Anthropic
+from groq import Groq
 
 from app.config import get_settings
 
-_client: Anthropic | None = None
+_client: Groq | None = None
 
 
-def _get_client() -> Anthropic:
+def _get_client() -> Groq:
     global _client
     if _client is None:
-        _client = Anthropic(api_key=get_settings().anthropic_api_key)
+        _client = Groq(api_key=get_settings().groq_api_key)
     return _client
 
 
 def answer_question(question: str, context_chunks: list[str]) -> str:
-    """Sends the retrieved chunks + question to Claude and returns the answer."""
+    """Sends the retrieved chunks + question to Groq (Llama) and returns the answer."""
     if not context_chunks:
         return (
             "I couldn't find anything in this document that relates to your "
@@ -33,12 +33,13 @@ def answer_question(question: str, context_chunks: list[str]) -> str:
     user_message = f"Document excerpts:\n\n{context}\n\nQuestion: {question}"
 
     settings = get_settings()
-    response = _get_client().messages.create(
-        model=settings.claude_model,
+    response = _get_client().chat.completions.create(
+        model=settings.groq_model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ],
         max_tokens=600,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_message}],
     )
 
-    text_blocks = [block.text for block in response.content if block.type == "text"]
-    return "\n".join(text_blocks).strip()
+    return (response.choices[0].message.content or "").strip()

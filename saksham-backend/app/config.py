@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # --- Anthropic (used to generate answers from retrieved chunks) ---
-    anthropic_api_key: str
-    claude_model: str = "claude-sonnet-5"
+    groq_api_key: str
+    groq_model: str = "llama-3.3-70b-versatile"
 
     # --- Clerk (used to verify the frontend's session token) ---
     # Find this in the Clerk dashboard: Configure > API Keys > "Frontend API URL".
