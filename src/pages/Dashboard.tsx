@@ -115,7 +115,7 @@ function toUploadedFile(doc: ApiDocument, sizeLabel = '—'): UploadedFile {
 
 function Dashboard() {
   const { theme, toggleTheme } = useTheme();
-  const { getToken } = useAuth();
+  const { getToken, isLoaded: isAuthLoaded } = useAuth();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [messagesByFile, setMessagesByFile] = useState<Record<string, ChatMessage[]>>({});
