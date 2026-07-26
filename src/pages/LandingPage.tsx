@@ -104,7 +104,7 @@ function LandingPage() {
       </main>
 
       <footer className="footer">
-        Made with <span className="heart">♥</span> — Saksham is being built in the open.
+        Made with <span className="heart">♥</span> by Sankalp.
       </footer>
     </div>
   );
