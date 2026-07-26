@@ -130,6 +130,8 @@ function Dashboard() {
   const activeMessages = activeFileId ? messagesByFile[activeFileId] ?? [] : [];
 
   useEffect(() => {
+    if (!isAuthLoaded) return;
+
     (async () => {
       try {
         const token = await getToken();
@@ -142,7 +144,7 @@ function Dashboard() {
         setIsLoadingFiles(false);
       }
     })();
-  }, [getToken]);
+  }, [getToken, isAuthLoaded]);
 
   const ingestFiles = useCallback(
     (fileList: FileList) => {
