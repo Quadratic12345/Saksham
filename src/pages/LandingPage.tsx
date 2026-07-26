@@ -97,7 +97,7 @@ function LandingPage() {
           </SignedIn>
         </div>
 
-        <a className="github-link" href="https://github.com" target="_blank" rel="noreferrer">
+        <a className="github-link" href="https://github.com/Quadratic12345/Saksham" target="_blank" rel="noreferrer">
           <StarIcon />
           Star on GitHub
         </a>
