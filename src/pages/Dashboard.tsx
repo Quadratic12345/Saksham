@@ -148,7 +148,30 @@ function Dashboard() {
 
   const ingestFiles = useCallback(
     (fileList: FileList) => {
-      const pdfFiles = Array.from(fileList).filter((f) => f.type === 'application/pdf');
+      const allFiles = Array.from(fileList);
+
+      // Some PDFs aren't reliably reported as 'application/pdf' by the
+      // browser depending on OS/source, so fall back to checking the
+      // file extension too rather than relying on MIME type alone.
+      const isPdf = (f: File) =>
+        f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
+
+      const pdfFiles = allFiles.filter(isPdf);
+      const rejectedFiles = allFiles.filter((f) => !isPdf(f));
+
+      rejectedFiles.forEach((file) => {
+        const tempId = `rejected-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        setFiles((prev) => [
+          ...prev,
+          {
+            id: tempId,
+            name: file.name,
+            sizeLabel: formatSize(file.size),
+            status: 'error',
+            errorMessage: 'Only PDF files are supported.',
+          },
+        ]);
+      });
 
       pdfFiles.forEach(async (file) => {
         const tempId = `uploading-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
