@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # --- Anthropic (used to generate answers from retrieved chunks) ---
     groq_api_key: str
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
 
     # --- Clerk (used to verify the frontend's session token) ---
     # Find this in the Clerk dashboard: Configure > API Keys > "Frontend API URL".
