@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -298,9 +299,9 @@ function Dashboard() {
   return (
     <div className="dash-page">
       <header className="topbar">
-        <div className="wordmark">
+        <Link to="/" className="wordmark">
           Saksham<span className="wordmark-dot">.</span>
-        </div>
+        </Link>
         <div className="dash-topbar-actions">
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <ProfileMenu />

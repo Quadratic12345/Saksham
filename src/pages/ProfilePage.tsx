@@ -15,9 +15,9 @@ function ProfilePage() {
   return (
     <div className="dash-page">
       <header className="topbar">
-        <div className="wordmark">
+        <Link to="/" className="wordmark">
           Saksham<span className="wordmark-dot">.</span>
-        </div>
+        </Link>
         <div className="dash-topbar-actions">
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <ProfileMenu />

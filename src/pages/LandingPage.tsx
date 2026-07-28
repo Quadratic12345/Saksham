@@ -31,7 +31,7 @@ function HighlighterUnderline() {
 
 function LandingPage() {
   const { theme, toggleTheme } = useTheme();
-  const wordmarkRef = useRef<HTMLDivElement>(null);
+  const wordmarkRef = useRef<HTMLAnchorElement>(null);
   const [ruleLeft, setRuleLeft] = useState<number | null>(null);
 
   useEffect(() => {
@@ -57,9 +57,9 @@ function LandingPage() {
       />
 
       <header className="topbar">
-        <div className="wordmark" ref={wordmarkRef}>
+        <Link to="/" className="wordmark" ref={wordmarkRef}>
           Saksham<span className="wordmark-dot">.</span>
-        </div>
+        </Link>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
