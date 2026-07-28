@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeToggle } from '../components/ThemeToggle';
 import ProfileMenu from '../components/ProfileMenu';
+import DashboardBackground from '../components/DashboardBackground';
 import { ApiError, askQuestion, deleteDocument, listDocuments, uploadDocument } from '../lib/api';
 import type { ApiDocument } from '../lib/api';
 import './Dashboard.css';
@@ -298,6 +299,7 @@ function Dashboard() {
 
   return (
     <div className="dash-page">
+      <DashboardBackground />
       <header className="topbar">
         <Link to="/" className="wordmark">
           Saksham<span className="wordmark-dot">.</span>
