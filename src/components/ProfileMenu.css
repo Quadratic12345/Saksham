@@ -85,3 +85,17 @@
 .profile-dropdown-item:hover {
   background: var(--surface-hover);
 }
+
+@media (max-width: 480px) {
+  .profile-name {
+    display: none;
+  }
+
+  .profile-trigger {
+    padding: 6px;
+  }
+
+  .profile-dropdown {
+    min-width: 160px;
+  }
+}

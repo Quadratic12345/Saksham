@@ -57,3 +57,29 @@
   color: var(--ink-muted);
   margin-top: 6px;
 }
+
+@media (max-width: 480px) {
+  .profile-page-main {
+    padding: 24px 16px;
+    gap: 14px;
+  }
+
+  .profile-page-title {
+    font-size: 1.5rem;
+  }
+
+  .profile-panel {
+    padding: 16px;
+  }
+
+  .profile-account-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .profile-account-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}

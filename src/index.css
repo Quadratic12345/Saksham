@@ -199,3 +199,13 @@ a {
 .btn-ghost:hover {
   background: var(--surface-hover);
 }
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 18px 16px;
+  }
+
+  .wordmark {
+    font-size: 1.2rem;
+  }
+}
