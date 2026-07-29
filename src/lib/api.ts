@@ -4,6 +4,8 @@ export interface ApiDocument {
   id: string;
   filename: string;
   status: 'parsing' | 'ready' | 'error';
+  doc_type?: 'text' | 'image';
+  error_message?: string | null;
 }
 
 export class ApiError extends Error {

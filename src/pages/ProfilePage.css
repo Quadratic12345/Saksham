@@ -1,15 +1,59 @@
 .profile-page-main {
+  position: relative;
+  z-index: 1;
   flex: 1;
   padding: 40px clamp(20px, 5vw, 56px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  align-items: flex-start;
+  gap: 20px;
+  align-items: stretch;
+  max-width: 640px;
 }
 
 .profile-page-title {
   font-family: var(--font-display);
   font-size: 1.8rem;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   color: var(--ink);
+}
+
+.profile-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.profile-account-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.profile-account-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-account-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.profile-account-email {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.profile-account-meta {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  margin-top: 6px;
 }
