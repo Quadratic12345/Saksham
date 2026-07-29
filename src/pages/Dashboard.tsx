@@ -5,7 +5,6 @@ import { useAuth } from '@clerk/clerk-react';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeToggle } from '../components/ThemeToggle';
 import ProfileMenu from '../components/ProfileMenu';
-import DashboardBackground from '../components/DashboardBackground';
 import { ApiError, askQuestion, deleteDocument, listDocuments, uploadDocument } from '../lib/api';
 import type { ApiDocument } from '../lib/api';
 import './Dashboard.css';
@@ -35,20 +34,8 @@ function formatSize(bytes: number): string {
 function UploadIcon() {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 15V4M12 4l-4 4M12 4l4 4"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M12 15V4M12 4l-4 4M12 4l4 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -56,12 +43,7 @@ function UploadIcon() {
 function FileIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
+      <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <path d="M14 2v6h6" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
     </svg>
   );
@@ -70,12 +52,7 @@ function FileIcon() {
 function CloseIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 5l14 14M19 5L5 19"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+      <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -83,12 +60,7 @@ function CloseIcon() {
 function SendIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 12l16-7-6 16-2.5-6.5L4 12Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
+      <path d="M4 12l16-7-6 16-2.5-6.5L4 12Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -117,7 +89,7 @@ function toUploadedFile(doc: ApiDocument, sizeLabel = '—'): UploadedFile {
 
 function Dashboard() {
   const { theme, toggleTheme } = useTheme();
-  const { getToken, isLoaded: isAuthLoaded } = useAuth();
+  const { getToken } = useAuth();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [messagesByFile, setMessagesByFile] = useState<Record<string, ChatMessage[]>>({});
@@ -132,8 +104,6 @@ function Dashboard() {
   const activeMessages = activeFileId ? messagesByFile[activeFileId] ?? [] : [];
 
   useEffect(() => {
-    if (!isAuthLoaded) return;
-
     (async () => {
       try {
         const token = await getToken();
@@ -146,34 +116,11 @@ function Dashboard() {
         setIsLoadingFiles(false);
       }
     })();
-  }, [getToken, isAuthLoaded]);
+  }, [getToken]);
 
   const ingestFiles = useCallback(
     (fileList: FileList) => {
-      const allFiles = Array.from(fileList);
-
-      // Some PDFs aren't reliably reported as 'application/pdf' by the
-      // browser depending on OS/source, so fall back to checking the
-      // file extension too rather than relying on MIME type alone.
-      const isPdf = (f: File) =>
-        f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
-
-      const pdfFiles = allFiles.filter(isPdf);
-      const rejectedFiles = allFiles.filter((f) => !isPdf(f));
-
-      rejectedFiles.forEach((file) => {
-        const tempId = `rejected-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-        setFiles((prev) => [
-          ...prev,
-          {
-            id: tempId,
-            name: file.name,
-            sizeLabel: formatSize(file.size),
-            status: 'error',
-            errorMessage: 'Only PDF files are supported.',
-          },
-        ]);
-      });
+      const pdfFiles = Array.from(fileList).filter((f) => f.type === 'application/pdf');
 
       pdfFiles.forEach(async (file) => {
         const tempId = `uploading-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -195,18 +142,14 @@ function Dashboard() {
 
           setFiles((prev) =>
             prev.map((f) =>
-              f.id === tempId
-                ? { ...toUploadedFile(doc, placeholder.sizeLabel) }
-                : f
+              f.id === tempId ? { ...toUploadedFile(doc, placeholder.sizeLabel) } : f
             )
           );
           setActiveFileId((prev) => (prev === tempId ? doc.id : prev));
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Upload failed.';
           setFiles((prev) =>
-            prev.map((f) =>
-              f.id === tempId ? { ...f, status: 'error', errorMessage: message } : f
-            )
+            prev.map((f) => (f.id === tempId ? { ...f, status: 'error', errorMessage: message } : f))
           );
         }
       });
@@ -240,8 +183,7 @@ function Dashboard() {
       const token = await getToken();
       if (token) await deleteDocument(id, token);
     } catch {
-      // Deletion failing server-side isn't critical to surface here —
-      // the file is already gone from the visible list.
+      // Deletion failing server-side isn't critical to surface here.
     }
   };
 
@@ -250,11 +192,7 @@ function Dashboard() {
     const text = draftMessage.trim();
     if (!text || !activeFile || activeFile.status !== 'ready') return;
 
-    const userMessage: ChatMessage = {
-      id: `${Date.now()}-user`,
-      role: 'user',
-      text,
-    };
+    const userMessage: ChatMessage = { id: `${Date.now()}-user`, role: 'user', text };
 
     setMessagesByFile((prev) => ({
       ...prev,
@@ -269,11 +207,7 @@ function Dashboard() {
 
       const answer = await askQuestion(activeFile.id, text, token);
 
-      const assistantMessage: ChatMessage = {
-        id: `${Date.now()}-assistant`,
-        role: 'assistant',
-        text: answer,
-      };
+      const assistantMessage: ChatMessage = { id: `${Date.now()}-assistant`, role: 'assistant', text: answer };
       setMessagesByFile((prev) => ({
         ...prev,
         [activeFile.id]: [...(prev[activeFile.id] ?? []), assistantMessage],
@@ -283,11 +217,7 @@ function Dashboard() {
         err instanceof ApiError
           ? err.message
           : 'Something went wrong reaching the server — is the backend running?';
-      const errorMessage: ChatMessage = {
-        id: `${Date.now()}-error`,
-        role: 'assistant',
-        text: message,
-      };
+      const errorMessage: ChatMessage = { id: `${Date.now()}-error`, role: 'assistant', text: message };
       setMessagesByFile((prev) => ({
         ...prev,
         [activeFile.id]: [...(prev[activeFile.id] ?? []), errorMessage],
@@ -299,7 +229,6 @@ function Dashboard() {
 
   return (
     <div className="dash-page">
-      <DashboardBackground />
       <header className="topbar">
         <Link to="/" className="wordmark">
           Saksham<span className="wordmark-dot">.</span>
@@ -330,14 +259,7 @@ function Dashboard() {
             <p>
               Drop a PDF here, or <span className="dropzone-link">browse</span>
             </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              multiple
-              onChange={handleFileInputChange}
-              hidden
-            />
+            <input ref={fileInputRef} type="file" accept="application/pdf" multiple onChange={handleFileInputChange} hidden />
           </div>
 
           {loadError && <p className="dash-empty-hint">Couldn't load your documents: {loadError}</p>}
@@ -345,9 +267,7 @@ function Dashboard() {
           {isLoadingFiles ? (
             <p className="dash-empty-hint">Loading your documents…</p>
           ) : files.length === 0 ? (
-            <p className="dash-empty-hint">
-              Upload a PDF of your notes to start asking questions about them.
-            </p>
+            <p className="dash-empty-hint">Upload a PDF of your notes to start asking questions about them.</p>
           ) : (
             <ul className="file-list">
               {files.map((file) => (
@@ -387,9 +307,7 @@ function Dashboard() {
 
           <div className="chat-scroll">
             {!activeFile && (
-              <p className="dash-empty-hint">
-                Select or upload a PDF to start asking questions about it.
-              </p>
+              <p className="dash-empty-hint">Select or upload a PDF to start asking questions about it.</p>
             )}
 
             {activeFile && activeFile.status === 'error' && (
@@ -399,18 +317,12 @@ function Dashboard() {
             )}
 
             {activeFile && (activeFile.status === 'uploading' || activeFile.status === 'parsing') && (
-              <p className="dash-empty-hint">
-                {statusLabel(activeFile.status)} — this'll just take a moment.
-              </p>
+              <p className="dash-empty-hint">{statusLabel(activeFile.status)} — this'll just take a moment.</p>
             )}
 
-            {activeFile &&
-              activeFile.status === 'ready' &&
-              activeMessages.length === 0 && (
-                <p className="dash-empty-hint">
-                  Ready. Ask anything about this document below.
-                </p>
-              )}
+            {activeFile && activeFile.status === 'ready' && activeMessages.length === 0 && (
+              <p className="dash-empty-hint">Ready. Ask anything about this document below.</p>
+            )}
 
             {activeMessages.map((message) => (
               <div key={message.id} className={`chat-bubble chat-bubble-${message.role}`}>
@@ -419,9 +331,7 @@ function Dashboard() {
             ))}
 
             {isThinking && (
-              <div className="chat-bubble chat-bubble-assistant chat-bubble-thinking">
-                Thinking…
-              </div>
+              <div className="chat-bubble chat-bubble-assistant chat-bubble-thinking">Thinking…</div>
             )}
           </div>
 
