@@ -3,23 +3,16 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background-image: url('../assets/dashboard-bg.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-.dash-background {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.topbar,
-.dash-main {
+.dash-page .topbar {
   position: relative;
-  z-index: 1;
-  background: var(--bg);
+  z-index: 100;
 }
 
 .dash-topbar-actions {
