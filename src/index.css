@@ -1,3 +1,12 @@
+@import "tailwindcss";
+
+/*
+  Our theme toggle sets data-theme="dark"/"light" on <html>, not a plain
+  ".dark" class — so Tailwind's dark: utilities need to be told to key off
+  that attribute instead of its default class/media strategy.
+*/
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ---------------------------------------------------------
    Saksham — design tokens
    Theme: ink & marigold. Paper surfaces, a warm highlighter
