@@ -170,6 +170,21 @@
   color: var(--ink);
 }
 
+.file-item-view {
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: inline-flex;
+}
+
+.file-item-view:hover {
+  background: var(--border);
+  color: var(--accent);
+}
+
 /* --- chat panel --- */
 
 .dash-chat-panel {

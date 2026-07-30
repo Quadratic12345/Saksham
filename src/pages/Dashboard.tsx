@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeToggle } from '../components/ThemeToggle';
 import ProfileMenu from '../components/ProfileMenu';
-import { ApiError, askQuestion, deleteDocument, listDocuments, uploadDocument } from '../lib/api';
+import { ApiError, askQuestion, deleteDocument, fetchDocumentFileUrl, listDocuments, uploadDocument } from '../lib/api';
 import type { ApiDocument } from '../lib/api';
 import './Dashboard.css';
 
@@ -45,6 +45,20 @@ function FileIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <path d="M14 2v6h6" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
     </svg>
   );
 }
@@ -187,6 +201,18 @@ function Dashboard() {
     }
   };
 
+  const handleViewFile = async (id: string) => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const url = await fetchDocumentFileUrl(id, token);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      console.error('Could not open PDF:', err);
+    }
+  };
+
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     const text = draftMessage.trim();
@@ -283,6 +309,19 @@ function Dashboard() {
                       {file.sizeLabel} · <span className={`status-badge status-${file.status}`}>{statusLabel(file.status)}</span>
                     </span>
                   </div>
+                  {file.status === 'ready' && (
+                    <button
+                      type="button"
+                      className="file-item-view"
+                      aria-label={`View ${file.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewFile(file.id);
+                      }}
+                    >
+                      <EyeIcon />
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="file-item-remove"

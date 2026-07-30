@@ -79,3 +79,27 @@ export async function askQuestion(
   const data = await handleResponse<{ answer: string }>(res);
   return data.answer;
 }
+
+// The file endpoint requires an Authorization header, which a plain
+// <iframe src="..."> or <a href="..."> can't send — so we fetch it
+// ourselves and hand back a blob: URL the browser can open directly.
+// Remember to URL.revokeObjectURL() this when you're done with it.
+export async function fetchDocumentFileUrl(documentId: string, token: string): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/api/documents/${documentId}/file`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = body.detail ?? detail;
+    } catch {
+      // not JSON — fall back to statusText
+    }
+    throw new ApiError(res.status, detail);
+  }
+
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
