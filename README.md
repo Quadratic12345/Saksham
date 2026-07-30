@@ -1,6 +1,6 @@
 # Saksham
 
-Upload your notes as a PDF — typed or handwritten — and ask questions
+Upload your notes as a PDF typed or handwritten and ask questions
 about them. Saksham reads what's actually in the document and answers
 from that, not from general knowledge.
 
@@ -8,28 +8,28 @@ from that, not from general knowledge.
 
 ## What it does
 
-- **Sign up / log in** — handled by Clerk, no backend of your own needed for auth
-- **Upload a PDF** — drag-and-drop or browse
+- **Sign up / log in** handled by Clerk, no backend of your own needed for auth
+- **Upload a PDF** drag-and-drop or browse
   - Typed/digital PDFs get parsed and indexed for fast, targeted retrieval
   - Handwritten or scanned PDFs are read directly by a vision-capable model —
     no separate OCR step, no loss of accuracy from a text-extraction middleman
-- **Ask questions** — get answers grounded in the actual document, with a
+- **Ask questions** get answers grounded in the actual document, with a
   clear "I couldn't find that" instead of a made-up answer when it's not
   in there
-- **Profile page** — see your account details and every note you've
+- **Profile page** see your account details and every note you've
   uploaded, with its status and type at a glance
-- **Light/dark mode** — a toggle that actually persists across visits
+- **Light/dark mode** a toggle that actually persists across visits
 
 ## How it's built
 
-This is a monorepo — two independent apps that talk to each other over
+This is a monorepo  two independent apps that talk to each other over
 an API, not a single combined codebase.
 
 ### Frontend
 - **Vite + React + TypeScript**
 - **Clerk** for authentication (sign up, log in, session management)
-- **react-router-dom** — `/` (landing), `/dashboard`, `/profile`
-- **Tailwind CSS** — used specifically to keep Clerk's UI in sync with the
+- **react-router-dom**  `/` (landing), `/dashboard`, `/profile`
+- **Tailwind CSS** used specifically to keep Clerk's UI in sync with the
   rest of the app's theme, on top of the app's own CSS-variable-based
   design system
 - Deployed on **Vercel**
