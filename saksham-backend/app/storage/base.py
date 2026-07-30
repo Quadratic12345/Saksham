@@ -23,3 +23,12 @@ class StorageBackend(ABC):
 
     @abstractmethod
     def delete_document(self, doc_id: str, user_id: str) -> None: ...
+
+    # Kept separate from the DocumentRecord flow above on purpose — listing
+    # or fetching metadata shouldn't have to load every PDF's raw bytes
+    # into memory each time.
+    @abstractmethod
+    def save_file(self, doc_id: str, file_bytes: bytes) -> None: ...
+
+    @abstractmethod
+    def get_file(self, doc_id: str, user_id: str) -> bytes | None: ...

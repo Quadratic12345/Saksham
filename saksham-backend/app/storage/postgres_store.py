@@ -25,12 +25,14 @@ class PostgresStorageBackend(StorageBackend):
                     user_id=doc.user_id,
                     filename=doc.filename,
                     status=doc.status,
+                    doc_type=doc.doc_type,
                     error_message=doc.error_message,
                 )
             )
         else:
             existing.filename = doc.filename
             existing.status = doc.status
+            existing.doc_type = doc.doc_type
             existing.error_message = doc.error_message
         self._db.commit()
 
@@ -54,6 +56,18 @@ class PostgresStorageBackend(StorageBackend):
             self._db.delete(row)
             self._db.commit()
 
+    def save_file(self, doc_id: str, file_bytes: bytes) -> None:
+        row = self._db.get(DocumentModel, doc_id)
+        if row is not None:
+            row.file_bytes = file_bytes
+            self._db.commit()
+
+    def get_file(self, doc_id: str, user_id: str) -> bytes | None:
+        row = self._db.get(DocumentModel, doc_id)
+        if row is None or row.user_id != user_id:
+            return None
+        return row.file_bytes
+
 
 def _to_record(row: DocumentModel) -> DocumentRecord:
     return DocumentRecord(
@@ -61,5 +75,6 @@ def _to_record(row: DocumentModel) -> DocumentRecord:
         user_id=row.user_id,
         filename=row.filename,
         status=row.status,  # type: ignore[arg-type]
+        doc_type=row.doc_type,  # type: ignore[arg-type]
         error_message=row.error_message,
     )
